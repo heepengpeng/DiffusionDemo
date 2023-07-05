@@ -70,7 +70,7 @@ def diffusion_loss_fn(model, x_0, alphas_bar_sqrt, one_minus_alphas_bar_sqrt, n_
 
     am1 = one_minus_alphas_bar_sqrt[t]
 
-    e = torch.randn_like(x_0)
+    e = torch.randn_like(x_0).to("cuda:0")
 
     x = x_0 * a + e * am1
     x = x.to("cuda:0")
