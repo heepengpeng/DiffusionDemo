@@ -73,7 +73,7 @@ def diffusion_loss_fn(model, x_0, alphas_bar_sqrt, one_minus_alphas_bar_sqrt, n_
     e = torch.randn_like(x_0)
 
     x = x_0 * a + e * am1
-
+    x = x.to("cuda:0")
     output = model(x, t.squeeze(-1))
     return (e - output).square().mean()
 
@@ -107,6 +107,8 @@ def train(model):
     for t in range(num_epoch):
         for idx, batch_x in enumerate(dataloader):
             loss = diffusion_loss_fn(model, batch_x, alphas_bar_sqrt, one_minus_alphas_bar_sqrt, num_steps)
+            if (t+1) % 100 == 0:
+                print(f"{t+1} steps, loss:{loss}")
             optimizer.zero_grad()
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.)
@@ -119,7 +121,7 @@ def sample_100(model):
 
 
 if __name__ == '__main__':
-    model = MLPDiffusion(num_steps)
+    model = MLPDiffusion(num_steps).to("cuda:0")
 
     print("start to train")
     start_time = time.time()
