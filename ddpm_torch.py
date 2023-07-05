@@ -74,7 +74,7 @@ def diffusion_loss_fn(model, x_0, alphas_bar_sqrt, one_minus_alphas_bar_sqrt, n_
 
     x = x_0 * a + e * am1
     x = x.to("cuda:0")
-    output = model(x, t.squeeze(-1))
+    output = model(x, t.squeeze(-1).to("cuda:0"))
     return (e - output).square().mean()
 
 
