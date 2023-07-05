@@ -144,12 +144,12 @@ def sample_100(model):
 
 if __name__ == '__main__':
     model = MLPDiffusion(num_steps)
-
+    print("start to train")
     start_time = time.time()
     train(model)
     train_end_time = time.time()
     print(f"train time consume: {train_end_time - start_time}")
-
+    print("start to sample")
     start_time = time.time()
     sample_100(model)
     sample_end_time = time.time()
