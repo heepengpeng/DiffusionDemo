@@ -5,6 +5,8 @@ import mindspore.dataset as ds
 import numpy as np
 from sklearn.datasets import make_s_curve
 
+ms.set_context(mode=ms.GRAPH_MODE, device_target="GPU")
+
 num_steps = 100
 
 betas = ms.ops.linspace(ms.Tensor(-6).astype(ms.float32), ms.Tensor(6).astype(ms.float32), num_steps)
@@ -101,7 +103,7 @@ def train(model):
     dataset_ds = ds.NumpySlicesDataset(data=s_curve, shuffle=True)
     dataset_ds = dataset_ds.batch(batch_size)
 
-    num_epoch = 800
+    num_epoch = 4000
 
     # 定义模型，优化器
 
@@ -133,8 +135,8 @@ def train(model):
         for idx, batch_x in enumerate(iterator):
             loss = train_step(batch_x['column_0'].astype(ms.float32))
         # 在训练过程中打印loss变化及采样结果
-        if ((t + 1) % 100 == 0):
-            print(f"epoch: {t + 1}, loss: {loss}")
+        if t % 100 == 0:
+            print(f"epoch: {t}, loss: {loss}")
 
 
 def sample_100(model):

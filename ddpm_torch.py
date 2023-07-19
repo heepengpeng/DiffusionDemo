@@ -11,13 +11,13 @@ dataset = torch.Tensor(s_curve).float()
 
 num_steps = 100
 
-betas = torch.linspace(-6, 6, num_steps)
-betas = torch.sigmoid(betas) * (0.5e-2 - 1e-5) + 1e-5
+betas = torch.linspace(-6, 6, num_steps).to("cuda:0")
+betas = torch.sigmoid(betas).to("cuda:0") * (0.5e-2 - 1e-5) + 1e-5
 
 alphas = 1 - betas
-alphas_prod = torch.cumprod(alphas, 0)
-alphas_prod_p = torch.cat([torch.tensor([1]).float(), alphas_prod[:-1]], 0)
-alphas_bar_sqrt = torch.sqrt(alphas_prod)
+alphas_prod = torch.cumprod(alphas, 0).to("cuda:0")
+alphas_prod_p = torch.cat([torch.tensor([1]).float().to("cuda:0"), alphas_prod[:-1]], 0)
+alphas_bar_sqrt = torch.sqrt(alphas_prod).to("cuda:0")
 one_minus_alphas_bar_log = torch.log(1 - alphas_prod)
 one_minus_alphas_bar_sqrt = torch.sqrt(1 - alphas_prod)
 
@@ -92,9 +92,11 @@ def p_sample_loop(model, shape, n_steps, betas, one_minus_alphas_bar_sqrt):
 def p_sample(model, x, t, betas, one_minus_alphas_bar_sqrt):
     t = torch.tensor([t])
     coeff = betas[t] / one_minus_alphas_bar_sqrt[t]
+    x = x.to("cuda:0")
+    t = t.to("cuda:0")
     eps_theta = model(x, t)
     mean = (1 / (1 - betas[t]).sqrt()) * (x - (coeff * eps_theta))
-    z = torch.randn_like(x)
+    z = torch.randn_like(x).to("cuda:0")
     sigma_t = betas[t].sqrt()
     sample = mean + sigma_t * z
     return (sample)
@@ -109,12 +111,12 @@ def train(model):
     for t in range(num_epoch):
         for idx, batch_x in enumerate(dataloader):
             loss = diffusion_loss_fn(model, batch_x, alphas_bar_sqrt, one_minus_alphas_bar_sqrt, num_steps)
-            if (t+1) % 100 == 0:
-                print(f"{t+1} steps, loss:{loss}")
             optimizer.zero_grad()
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.)
             optimizer.step()
+        if (t % 100 == 0):
+            print(loss)
 
 
 def sample_100(model):
